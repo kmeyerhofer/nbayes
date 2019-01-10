@@ -49,6 +49,10 @@ module NBayes
       data[category]
     end
 
+    def token_frequency(token, category)
+      data.token_frequency(token, category)
+    end
+
     def cat_data(category)
       unless data[category].is_a? Hash
         data[category] = new_category
@@ -194,8 +198,7 @@ module NBayes
         log_probs = 0
         denominator = (category_data[:total_tokens] + @k * vocab_count).to_f
         tokens.each do |token|
-          count = category_data[:tokens][token]
-          count = 0 if count.nil?
+          count = data.token_frequency(token, category)
           numerator = count + @k
           log_probs += Math.log( numerator / denominator )
         end
