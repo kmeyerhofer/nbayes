@@ -105,26 +105,27 @@ class DBData < DBConnection
     end
     total_tokens = result.values[0][0].to_i
     examples = result.values[0][1].to_i
-    { tokens: create_token_hash(category_name),
+    {
       total_tokens: total_tokens,
       examples: examples }
   end
 
-  def create_token_hash(category)
-    sql = <<~SQL
-    SELECT phrase, frequency
-    FROM tokens
-    WHERE category_id = (SELECT id FROM categories WHERE name = $1);
-    SQL
-    token_hash = Hash.new
+  def token_frequency(token, category)
     result = ''
-    connect { |connection| result = connection.exec_params(sql, [category]) }
-    result.map do |tuple|
-      token_hash[tuple['phrase']] = tuple['frequency'].to_i
+    sql = <<-SQL
+    SELECT frequency FROM tokens WHERE phrase = $1 AND category_id =
+    (SELECT id FROM categories WHERE name = $2);
+    SQL
+    connect do |connection|
+      result = connection.exec_params(sql, [token, category])
     end
-    token_hash
+    if result.first
+      result[0]['frequency'].to_i
+    else
+      0
+    end
   end
-
+  
   def keys
     sql = "SELECT name FROM categories;"
     result = ''
